@@ -124,12 +124,30 @@ colnames(NN)[1]<-"site_no"
 
 #pull in appropriate grid weather data
 # read txt files into a list (assuming separator is a comma)
-txt_files1 = list.files(pattern = 'data_4*') #get Lat and Long of grids from text file names
-data_list = lapply(txt_files1, read.table, sep = "")
+txt_files = list.files(pattern = 'data_4*') #get Lat and Long of grids from text file names
+data_list = lapply(txt_files, read.table, sep = "") #missing the lat and long, need to paste that somewhere
+#lat and long in same order...So need to extract the data sets and add lat and long to them
 
-#just move all the files into main file to start
+n<-nrow(data_list[[1]])
+
+weather<-do.call(rbind, data_list)
+names(weather)<-c("year","month","precipmm","maxT","minT","wind")
+
+#make index to add to weather dataframe
+NDX<-sort(rep(1:length(data_list),n))
+weather$NDX<-NDX
+
+latlong<-cbind.data.frame(lat,long,seq(1, length(lat), 1))
+names(latlong)<-c("G_lat","G_long","NDX")
+
+weath_d<-merge(weather,latlong,by="NDX")
+
+#now merge into NN
+NNweather<-merge(NN,weath_d,by=c("G_lat","G_long"))
+save(NNweather,file="output/NNweather.rdata")
 
 #delete the txt files that are super obviously too far away: all with latitudes below 40
+#just move all the files into main file to start
 
 
 #### 2 - GAGES II Basin Characteristics ####
